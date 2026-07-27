@@ -65,6 +65,40 @@ def normalize_git_selector(value):
     return normalized.split("/", 1)[0]
 
 
+def normalize_source_repo(source_repo):
+    """Normalize SOURCE_REPO from owner/repo, GitHub URL, or tree URL."""
+    if not source_repo:
+        return "", ""
+
+    normalized = str(source_repo).strip()
+    inferred_tree = ""
+
+    github_prefixes = (
+        "https://github.com/",
+        "http://github.com/",
+        "github.com/",
+    )
+    for prefix in github_prefixes:
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix):]
+            break
+
+    normalized = normalized.strip("/")
+    if not normalized:
+        return "", ""
+
+    if "/tree/" in normalized:
+        repo_part, tree_part = normalized.split("/tree/", 1)
+        normalized = repo_part.strip("/")
+        inferred_tree = normalize_git_selector(tree_part)
+
+    path_parts = [part for part in normalized.split("/") if part]
+    if len(path_parts) < 2:
+        return normalized, inferred_tree
+
+    return "/".join(path_parts[:2]), inferred_tree
+
+
 def build_clone_command(source_repo, branch="", tree=""):
     """Build the git clone command, using branch when provided."""
     repo_url = f"https://github.com/{source_repo}.git"
@@ -268,17 +302,22 @@ def load_repo_accounts():
 
 def main():
     # Configuration
-    source_repo = SOURCE_REPO
+    source_repo, inferred_tree = normalize_source_repo(SOURCE_REPO)
     base_name = source_repo.split("/")[-1]
     num_repos = MAX_REPO  # For testing, change to 100 for production
     branch = normalize_git_selector(BRANCH)
-    tree = normalize_git_selector(TREE)
+    tree = normalize_git_selector(TREE) or inferred_tree
+
+    if not source_repo or source_repo.count("/") != 1:
+        print(f"❌ Invalid SOURCE_REPO: {SOURCE_REPO}")
+        return
 
     accounts = load_repo_accounts()
     if not accounts:
         return
 
     print(f"Using {len(accounts)} account(s) for round-robin repo creation")
+    print(f"Using source repo: {source_repo}")
     if branch:
         print(f"Using branch: {branch}")
     if tree:
