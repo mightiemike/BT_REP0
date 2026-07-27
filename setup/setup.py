@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 import subprocess
 import shutil
 import sys
@@ -11,7 +12,7 @@ import requests
 # Add the project root to the Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from questions import SOURCE_REPO, MAX_REPO
+from questions import BRANCH, SOURCE_REPO, MAX_REPO, TREE
 
 
 def copy_security_md_to_repo(worktree_dir: Path):
@@ -43,6 +44,49 @@ def copy_researcher_md_to_repo(worktree_dir: Path):
     return True
 
 
+
+
+def normalize_git_selector(value):
+    """Normalize a branch/commit selector from raw input or a GitHub tree URL."""
+    if not value:
+        return ""
+
+    normalized = str(value).strip()
+    if not normalized:
+        return ""
+
+    if "/tree/" in normalized:
+        normalized = normalized.split("/tree/", 1)[1]
+
+    normalized = normalized.strip("/")
+    if not normalized:
+        return ""
+
+    return normalized.split("/", 1)[0]
+
+
+def build_clone_command(source_repo, branch="", tree=""):
+    """Build the git clone command, using branch when provided."""
+    repo_url = f"https://github.com/{source_repo}.git"
+    command_parts = ["git", "clone"]
+
+    if branch:
+        command_parts.extend(["--branch", branch])
+
+    if not tree:
+        command_parts.extend(["--depth", "1"])
+
+    command_parts.extend([repo_url, "."])
+    return " ".join(shlex.quote(part) for part in command_parts)
+
+
+def checkout_tree(tree):
+    """Reset the cloned repository to a specific commit/tree-ish."""
+    if not tree:
+        return True
+
+    print(f"🔀 Resetting repository to {tree}...")
+    return run_command(f"git reset --hard {shlex.quote(tree)}")
 
 
 def run_command(command, cwd=None):
@@ -227,12 +271,18 @@ def main():
     source_repo = SOURCE_REPO
     base_name = source_repo.split("/")[-1]
     num_repos = MAX_REPO  # For testing, change to 100 for production
+    branch = normalize_git_selector(BRANCH)
+    tree = normalize_git_selector(TREE)
 
     accounts = load_repo_accounts()
     if not accounts:
         return
 
     print(f"Using {len(accounts)} account(s) for round-robin repo creation")
+    if branch:
+        print(f"Using branch: {branch}")
+    if tree:
+        print(f"Using tree/commit: {tree}")
 
     # Create a temporary directory
     temp_dir = Path("temp_repo")
@@ -246,13 +296,17 @@ def main():
     try:
         # Clone the source repo with depth 1 to save bandwidth
         print(f"🔍 Cloning {source_repo}...")
-        clone_cmd = f"git clone --depth 1 https://github.com/{source_repo}.git ."
+        clone_cmd = build_clone_command(source_repo, branch=branch, tree=tree)
         if not run_command(clone_cmd, cwd=temp_dir):
             print("❌ Failed to clone source repository")
             return
 
         # Change to the source directory
         os.chdir(temp_dir)
+
+        if not checkout_tree(tree):
+            print("❌ Failed to reset source repository to the requested tree/commit")
+            return
 
         # Remove .git directory
         shutil.rmtree(".git", ignore_errors=True)
@@ -294,4 +348,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
