@@ -1,7 +1,7 @@
 import json
 import os
 
-MAX_REPO = 25
+MAX_REPO = 40
 SOURCE_REPO = "tronprotocol/java-tron"
 REPO_NAME = "java-tron"
 TREE = ""
