@@ -2,8 +2,8 @@ import json
 import os
 
 MAX_REPO = 25
-SOURCE_REPO = "tronprotocol/java-tron"
-REPO_NAME = "java-tron"
+SOURCE_REPO = "Shopify/shopify-app-js"
+REPO_NAME = "shopify-app-js"
 TREE = ""
 BRANCH = ""
 # Example:
