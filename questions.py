@@ -3,7 +3,7 @@ import os
 
 MAX_REPO = 25
 SOURCE_REPO = "starkware-libs/sequencer"
-REPO_NAME = "nearcore"
+REPO_NAME = "sequencer"
 TREE = ""
 BRANCH = "main-v0.14.3"
 # Example:
