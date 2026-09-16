@@ -2,9 +2,9 @@ import json
 import os
 
 MAX_REPO = 25
-SOURCE_REPO = "starkware-libs/sequencer"
-REPO_NAME = "sequencer"
+SOURCE_REPO = "codertjay/chromium"
+REPO_NAME = "chromium"
 TREE = ""
-BRANCH = "main-v0.14.3"
+BRANCH = ""
 # Example:
 # https://github.com/pushchain/push-chain-node/tree/0648551281dada6e300f51baca0e7464cb210eef/
