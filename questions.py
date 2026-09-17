@@ -2,8 +2,8 @@ import json
 import os
 
 MAX_REPO = 25
-SOURCE_REPO = "codertjay/chromium"
-REPO_NAME = "chromium"
+SOURCE_REPO = "bazelbuild/bazel"
+REPO_NAME = "bazel"
 TREE = ""
 BRANCH = ""
 # Example:
