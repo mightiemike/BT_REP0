@@ -2,8 +2,8 @@ import json
 import os
 
 MAX_REPO = 25
-SOURCE_REPO = "bazelbuild/bazel"
-REPO_NAME = "bazel"
+SOURCE_REPO = "protocolbuffers/protobuf-go"
+REPO_NAME = "protobuf-go"
 TREE = ""
 BRANCH = ""
 # Example:
